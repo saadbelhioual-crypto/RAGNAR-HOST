@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Login</title>
+<style>
+:root{--line:rgba(255,255,255,.12);--text:#eef7ff;--muted:#9cb1c8;--a:#58d6ff;--a2:#9070ff;--shadow:0 24px 80px rgba(0,0,0,.42)}
+*{box-sizing:border-box}body{margin:0;min-height:100vh;display:grid;place-items:center;font-family:Inter,system-ui,Segoe UI,Arial,sans-serif;color:var(--text);background:radial-gradient(950px 520px at 7% 7%, rgba(88,214,255,.24), transparent 60%),radial-gradient(920px 520px at 93% 10%, rgba(144,112,255,.18), transparent 56%),linear-gradient(180deg,#0a1322,#040812)}
+.card{width:min(430px,92vw);padding:22px;border-radius:30px;border:1px solid var(--line);background:linear-gradient(180deg,rgba(255,255,255,.08),rgba(255,255,255,.05));box-shadow:var(--shadow);backdrop-filter:blur(18px)}
+.title{font-size:28px;font-weight:1000}.title span{background:linear-gradient(135deg,var(--a),var(--a2));-webkit-background-clip:text;background-clip:text;color:transparent}.sub{color:var(--muted);font-size:13px;line-height:1.65;margin-top:8px}input{width:100%;padding:14px 15px;border-radius:18px;border:1px solid var(--line);background:rgba(255,255,255,.05);color:var(--text);outline:none;margin-top:12px}.btn{width:100%;margin-top:14px;padding:14px;border-radius:18px;border:0;background:linear-gradient(135deg,var(--a),var(--a2));color:#03111b;font-weight:1000;cursor:pointer}.msg{min-height:18px;margin-top:12px;color:#ffd6d6;font-size:13px}
+</style>
+</head>
+<body>
+<div class="card">
+  <div class="title"><span>HAMA</span> HOST LOGIN</div>
+  <div class="sub">Admin creates all accounts. Log in with your username and password to enter your server directly.</div>
+  <input id="username" placeholder="Username">
+  <input id="password" type="password" placeholder="Password">
+  <button class="btn" onclick="login()">Login</button>
+  <div id="msg" class="msg"></div>
+</div>
+<script>
+async function login(){msg.textContent='';const r=await fetch('/api/auth/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username:username.value.trim(),password:password.value})});const d=await r.json().catch(()=>({success:false,message:'Login failed'}));if(!r.ok||!d.success){msg.textContent=d.message||'Login failed';return}location.href=d.is_admin?'/admin':'/'}
+</script>
+</body>
+</html>

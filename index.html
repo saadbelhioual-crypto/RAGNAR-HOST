@@ -1,0 +1,262 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Hama Host Panel</title>
+  <style>
+    :root{
+      --bg:#050916;--card:rgba(255,255,255,.08);--card2:rgba(255,255,255,.05);--line:rgba(255,255,255,.12);
+      --text:#edf6ff;--muted:#9db0c6;--accent:#5ad7ff;--accent2:#9272ff;--ok:#6dffb2;--warn:#ffd66b;--bad:#ff8d8d;
+      --shadow:0 24px 80px rgba(0,0,0,.42)
+    }
+    *{box-sizing:border-box} html,body{height:100%}
+    body{margin:0;font-family:Inter,system-ui,Segoe UI,Arial,sans-serif;color:var(--text);background:
+      radial-gradient(950px 520px at 7% 7%, rgba(90,215,255,.25), transparent 60%),
+      radial-gradient(920px 520px at 93% 10%, rgba(146,114,255,.18), transparent 56%),
+      linear-gradient(180deg,#0a1322,#040812)}
+    .wrap{max-width:1450px;margin:0 auto;padding:16px}
+    .top{display:flex;justify-content:space-between;align-items:center;gap:12px;position:sticky;top:0;z-index:30;background:rgba(4,8,18,.72);backdrop-filter:blur(18px);padding:14px 16px;border-bottom:1px solid var(--line)}
+    .logo{font-size:20px;font-weight:1000;letter-spacing:.8px}.logo span{background:linear-gradient(135deg,var(--accent),var(--accent2));-webkit-background-clip:text;background-clip:text;color:transparent}
+    .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+    .btn,.chip{border:1px solid var(--line);background:rgba(255,255,255,.06);color:var(--text);padding:12px 14px;border-radius:16px;font-weight:900;cursor:pointer;transition:.18s ease;box-shadow:0 0 0 rgba(0,0,0,0)}
+    .btn:hover,.chip:hover{transform:translateY(-1px);border-color:rgba(90,215,255,.34);box-shadow:0 10px 28px rgba(90,215,255,.12)}
+    .btn.primary,.tab.active{background:linear-gradient(135deg,var(--accent),var(--accent2));color:#03111b;border:0;box-shadow:0 14px 40px rgba(90,215,255,.22)}
+    .btn.bad{color:var(--bad);border-color:rgba(255,141,141,.25)}
+    .layout{display:grid;grid-template-columns:270px 1fr;gap:16px;margin-top:16px}
+    .card,.panel{background:linear-gradient(180deg,var(--card),var(--card2));border:1px solid var(--line);border-radius:28px;box-shadow:var(--shadow);backdrop-filter:blur(18px)}
+    .side{padding:18px}
+    .side h2,.panel h2{margin:0;font-size:22px;font-weight:1000}
+    .sub{margin-top:8px;color:var(--muted);font-size:13px;line-height:1.65}
+    .srvList{display:flex;flex-direction:column;gap:12px;margin-top:16px}
+    .srvItem{padding:16px;border-radius:20px;border:1px solid var(--line);background:rgba(255,255,255,.04);cursor:pointer;transition:.18s ease}
+    .srvItem:hover,.srvItem.active{transform:translateY(-2px);border-color:rgba(90,215,255,.35);background:rgba(255,255,255,.07)}
+    .srvItem .t{font-size:15px;font-weight:1000}
+    .srvItem .s{font-size:12px;color:var(--muted);margin-top:8px}
+    .pill{display:inline-flex;align-items:center;gap:8px;padding:6px 10px;border-radius:999px;border:1px solid var(--line);font-size:11px;font-weight:1000;margin-top:10px;background:rgba(255,255,255,.04)}
+    .panel{padding:18px}
+    .head{display:flex;justify-content:space-between;gap:12px;align-items:flex-start;flex-wrap:wrap}
+    .headTitle{font-size:28px;font-weight:1000;margin:0}
+    .metrics{display:grid;grid-template-columns:repeat(6,1fr);gap:12px;margin-top:16px}
+    .metric{padding:14px;border-radius:20px;border:1px solid var(--line);background:rgba(255,255,255,.04)}
+    .metric .k{font-size:11px;font-weight:1000;color:var(--muted);text-transform:uppercase;letter-spacing:.5px}
+    .metric .v{margin-top:8px;font-size:18px;font-weight:1000;word-break:break-word}
+    .mainGrid{display:grid;grid-template-columns:1.1fr .9fr;gap:16px;margin-top:16px}
+    .consoleCard,.filesCard{padding:16px;border-radius:24px;border:1px solid var(--line);background:rgba(255,255,255,.04)}
+    .consoleTop,.filesTop{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:12px}
+    .console{height:62vh;overflow:auto;padding:16px;border-radius:18px;background:#020814;border:1px solid rgba(255,255,255,.08);font-family:ui-monospace,SFMono-Regular,Consolas,monospace;font-size:13px;line-height:1.6;white-space:pre-wrap}
+    .path{padding:12px 14px;border-radius:16px;border:1px solid var(--line);background:rgba(255,255,255,.04);font-size:12px;color:var(--muted);flex:1}
+    .tabs{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:12px}
+    .tab{padding:11px 13px;border-radius:16px;border:1px solid var(--line);background:rgba(255,255,255,.04);font-weight:1000;cursor:pointer}
+    table{width:100%;border-collapse:collapse} th,td{padding:11px 10px;border-bottom:1px solid rgba(255,255,255,.08);text-align:left;font-size:13px;vertical-align:top}
+    th{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px}.linkish{cursor:pointer;font-weight:900}
+    .editor{position:fixed;inset:0;background:rgba(0,0,0,.6);display:none;align-items:center;justify-content:center;padding:18px}
+    .editorBox{width:min(1100px,96vw);height:min(86vh,800px);display:flex;flex-direction:column;padding:16px;border-radius:26px;border:1px solid var(--line);background:#08101d;box-shadow:var(--shadow)}
+    textarea{flex:1;width:100%;resize:none;border:1px solid var(--line);border-radius:18px;background:#030914;color:var(--text);padding:16px;font-family:ui-monospace,SFMono-Regular,Consolas,monospace;font-size:13px;outline:none}
+    input[type=file]{display:none}
+    a{color:#b7eeff}
+    @media (max-width:1250px){.layout,.mainGrid{grid-template-columns:1fr}.metrics{grid-template-columns:repeat(3,1fr)}}
+    @media (max-width:760px){.metrics{grid-template-columns:repeat(2,1fr)}.console{height:46vh}}
+  </style>
+</head>
+<body>
+  <div class="top wrap">
+    <div class="logo"><span>HAMA</span> HOST PANEL</div>
+    <div class="row">
+      <button id="adminBtn" class="btn" style="display:none" onclick="location.href='/admin'">Admin</button>
+      <button class="btn bad" onclick="location.href='/logout'">Logout</button>
+    </div>
+  </div>
+
+  <div class="wrap">
+    <div class="layout">
+      <aside class="card side">
+        <h2>Server</h2>
+        <div class="sub">Compact control panel. Set the main file, upload files, then start the server. Flask apps must run on <b>0.0.0.0</b> and use <b>PORT</b>.</div>
+        <div id="serverList" class="srvList"></div>
+      </aside>
+
+      <section class="panel">
+        <div class="head">
+          <div>
+            <h1 id="srvHeader" class="headTitle">Select a server</h1>
+            <div id="srvSub" class="sub">No server selected.</div>
+          </div>
+        </div>
+
+        <div class="metrics">
+          <div class="metric"><div class="k">Status</div><div id="statusTxt" class="v">Offline</div></div>
+          <div class="metric"><div class="k">CPU Limit</div><div id="cpuLimitTxt" class="v">15%</div></div>
+          <div class="metric"><div class="k">Memory Limit</div><div id="memLimitTxt" class="v">512 MB</div></div>
+          <div class="metric"><div class="k">Storage Limit</div><div id="storageLimitTxt" class="v">512 MB</div></div>
+          <div class="metric"><div class="k">Port</div><div id="portTxt" class="v">-</div></div>
+          <div class="metric"><div class="k">URL Code</div><div id="codeTxt" class="v">-</div></div>
+        </div>
+
+        <div class="metrics" style="margin-top:12px">
+          <div class="metric"><div class="k">CPU</div><div id="cpuTxt" class="v">0%</div></div>
+          <div class="metric"><div class="k">Memory</div><div id="memTxt" class="v">0 MB</div></div>
+          <div class="metric"><div class="k">Storage</div><div id="storageTxt" class="v">0 / 512 MB</div></div>
+          <div class="metric"><div class="k">Main File</div><div id="mainFileTxt" class="v">Not set</div></div>
+          <div class="metric" style="grid-column:span 2"><div class="k">Public URL</div><div id="urlTxt" class="v" style="font-size:14px">-</div></div>
+        </div>
+
+        <div class="mainGrid">
+          <div class="consoleCard">
+            <div class="consoleTop">
+              <div class="tabs">
+                <button class="btn primary" id="btnStart" onclick="srvAction('start')">Start</button>
+                <button class="btn" onclick="srvAction('restart')">Restart</button>
+                <button class="btn bad" onclick="srvAction('stop')">Stop</button>
+              </div>
+              <div class="tabs">
+                <button class="tab" onclick="changeStartup()">Set Main File</button>
+              </div>
+            </div>
+            <div id="logOut" class="console">No logs</div>
+          </div>
+
+          <div class="filesCard">
+            <div class="filesTop">
+              <div class="tabs">
+                <label class="tab" for="uploadFiles">Upload Files</label>
+                <label class="tab" for="uploadFolder">Upload Folder</label>
+                <button class="tab" onclick="newFolder()">New Folder</button>
+                <button class="tab" onclick="goBack()">Back</button>
+              </div>
+              <input id="uploadFiles" type="file" multiple onchange="doUploadFiles(this)">
+              <input id="uploadFolder" type="file" multiple webkitdirectory onchange="doUploadFolder(this)">
+            </div>
+            <div id="pathBar" class="path">root</div>
+            <table>
+              <thead><tr><th>Name</th><th>Size</th><th>Actions</th></tr></thead>
+              <tbody id="fileList"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+    </div>
+  </div>
+
+  <div class="editor" id="editorModal">
+    <div class="editorBox">
+      <div class="consoleTop">
+        <div id="edTitle" style="font-weight:1000">Editor</div>
+        <div class="row">
+          <button class="btn primary" onclick="saveFile()">Save</button>
+          <button class="btn bad" onclick="closeEditor()">Close</button>
+        </div>
+      </div>
+      <textarea id="edArea"></textarea>
+    </div>
+  </div>
+
+<script>
+let currentSrv=null,currentPath='',currentFile='',poll=null,servers=[];
+const byId=id=>document.getElementById(id);
+function escapeHtml(v){return (v??'').replace(/[&<>'"]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]))}
+function esc(v){return escapeHtml(v)}
+function pill(st){
+  const s=(st||'Offline').toLowerCase();
+  if(s==='running') return `<span class="pill" style="color:var(--ok)">RUNNING</span>`;
+  if(s.includes('limit')||s==='starting'||s==='installing') return `<span class="pill" style="color:var(--warn)">${esc((st||'').toUpperCase())}</span>`;
+  if(s==='banned') return `<span class="pill" style="color:var(--bad)">BANNED</span>`;
+  return `<span class="pill">${esc((st||'OFFLINE').toUpperCase())}</span>`;
+}
+async function loadServers(){
+  const r=await fetch('/servers');
+  if(r.redirected){location.href=r.url;return}
+  const d=await r.json();
+  servers=d.servers||[];
+  fetch('/admin').then(res=>{if(!res.redirected&&res.status===200)byId('adminBtn').style.display='inline-block'}).catch(()=>{});
+  const box=byId('serverList'); box.innerHTML='';
+  servers.forEach((s,i)=>{
+    const el=document.createElement('div');
+    el.className='srvItem'+(i===0?' active':'');
+    el.innerHTML=`<div class="t">${esc(s.title||'Server')}</div><div class="s">Port ${esc(String(s.port||'-'))}</div>${pill(s.status)}`;
+    el.onclick=()=>openServer(s);
+    box.appendChild(el);
+  });
+  if(servers.length) openServer(servers[0]);
+}
+function openServer(s){
+  currentSrv=s; currentPath='';
+  document.querySelectorAll('.srvItem').forEach((el,i)=>el.classList.toggle('active',servers[i]===s));
+  byId('srvHeader').textContent=s.title||'Server';
+  byId('srvSub').textContent=`Port: ${s.port||'-'} · Code: ${s.public_code||'-'}`;
+  byId('mainFileTxt').textContent=s.startup_file||'Not set';
+  byId('portTxt').textContent=s.port||'-';
+  byId('codeTxt').textContent=s.public_code||'-';
+  byId('urlTxt').innerHTML=s.url?`<a href="${esc(s.url)}" target="_blank">${esc(s.url)}</a>`:'-';
+  byId('cpuLimitTxt').textContent=(s.cpu_limit_percent||15)+'%';
+  byId('memLimitTxt').textContent=(s.memory_limit_mb||512)+' MB';
+  byId('storageLimitTxt').textContent=(s.storage_limit_mb||512)+' MB';
+  startPolling(); loadFiles();
+}
+async function startPolling(){
+  if(!currentSrv) return;
+  if(poll) clearInterval(poll);
+  const fn=async()=>{
+    try{
+      const r=await fetch(`/server/stats/${encodeURIComponent(currentSrv.key)}`);
+      if(r.redirected){location.href=r.url;return}
+      const d=await r.json();
+      byId('logOut').textContent=d.logs||'No logs';
+      byId('statusTxt').textContent=d.status||'Offline';
+      byId('cpuTxt').textContent=d.cpu||'0%';
+      byId('memTxt').textContent=d.mem||'0 MB';
+      byId('storageTxt').textContent=`${d.storage_mb||0} / ${d.storage_limit_mb||512} MB`;
+      byId('cpuLimitTxt').textContent=(d.cpu_limit_percent||15)+'%';
+      byId('memLimitTxt').textContent=(d.memory_limit_mb||512)+' MB';
+      byId('storageLimitTxt').textContent=(d.storage_limit_mb||512)+' MB';
+      byId('portTxt').textContent=d.port||'-';
+      byId('codeTxt').textContent=d.public_code||'-';
+      byId('urlTxt').innerHTML=d.url?`<a href="${esc(d.url)}" target="_blank">${esc(d.url)}</a>`:'-';
+      byId('btnStart').disabled=['Running','Installing','Starting'].includes(d.status);
+      byId('logOut').scrollTop=byId('logOut').scrollHeight;
+    }catch(e){}
+  };
+  await fn(); poll=setInterval(fn,2000);
+}
+async function srvAction(act){
+  if(!currentSrv) return;
+  const r=await fetch(`/server/action/${encodeURIComponent(currentSrv.key)}/${act}`,{method:'POST'});
+  const d=await r.json().catch(()=>({success:false,message:'Server error'}));
+  if(!r.ok||!d.success){ alert(d.message||'Action failed'); return; }
+  if((act==='start'||act==='restart')&&d.url){ byId('urlTxt').innerHTML=`<a href="${esc(d.url)}" target="_blank">${esc(d.url)}</a>`; }
+  setTimeout(startPolling,400);
+}
+function changeStartup(){
+  if(!currentSrv) return;
+  const v=prompt('Set main file, example: app.py or bot.py', currentSrv.startup_file||'');
+  if(v===null) return;
+  fetch(`/server/set-startup/${encodeURIComponent(currentSrv.key)}`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({file:v.trim()})})
+  .then(r=>r.json()).then(d=>{if(!d.success) alert(d.message||'Failed'); else {currentSrv.startup_file=v.trim();byId('mainFileTxt').textContent=v.trim()||'Not set';}})
+}
+async function loadFiles(){
+  if(!currentSrv) return;
+  const r=await fetch(`/files/list/${encodeURIComponent(currentSrv.key)}?path=${encodeURIComponent(currentPath)}`);
+  const d=await r.json();
+  if(!d.success){currentPath='';return}
+  byId('pathBar').textContent=d.path?`root / ${d.path}`:'root';
+  const rows=[];
+  (d.dirs||[]).forEach(x=>rows.push(`<tr><td><span class="linkish" onclick="openFolder('${esc(x.name)}')">📁 ${esc(x.name)}</span></td><td>—</td><td><button class="chip" onclick="renameDir('${esc(x.name)}')">Rename</button> <button class="chip" onclick="deleteDir('${esc(x.name)}')">Delete</button></td></tr>`));
+  (d.files||[]).forEach(x=>{const rel=currentPath?`${currentPath}/${x.name}`:x.name;rows.push(`<tr><td><span class="linkish" onclick="openEditor('${esc(rel)}')">📄 ${esc(x.name)}</span></td><td>${esc(x.size||'')}</td><td><button class="chip" onclick="renameFilePrompt('${esc(x.name)}')">Rename</button> <button class="chip" onclick="deleteFilePrompt('${esc(x.name)}')">Delete</button></td></tr>`)})
+  byId('fileList').innerHTML=rows.join('');
+}
+function openFolder(name){currentPath=currentPath?`${currentPath}/${name}`:name;loadFiles()}
+function goBack(){if(!currentPath)return;const p=currentPath.split('/');p.pop();currentPath=p.join('/');loadFiles()}
+function newFolder(){const v=prompt('Create folder','');if(!v)return;fetch(`/files/mkdir/${encodeURIComponent(currentSrv.key)}`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({path:currentPath,name:v})}).then(()=>loadFiles())}
+function renameDir(oldName){const v=prompt('Rename folder',oldName);if(!v)return;fetch(`/files/rename/${encodeURIComponent(currentSrv.key)}`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({path:currentPath,old:oldName,new:v})}).then(()=>loadFiles())}
+async function deleteDir(name){if(!confirm(`Delete folder "${name}" and all inside?`))return;await fetch(`/files/delete/${encodeURIComponent(currentSrv.key)}`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({path:currentPath,name,kind:'dir'})});loadFiles()}
+function renameFilePrompt(oldName){const v=prompt('Rename file',oldName);if(!v)return;fetch(`/files/rename/${encodeURIComponent(currentSrv.key)}`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({path:currentPath,old:oldName,new:v})}).then(()=>loadFiles())}
+async function deleteFilePrompt(name){if(!confirm(`Delete ${name}?`))return;await fetch(`/files/delete/${encodeURIComponent(currentSrv.key)}`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({path:currentPath,name,kind:'file'})});loadFiles()}
+async function doUploadFiles(input){if(!input.files||!input.files.length)return;const fd=new FormData();for(const f of input.files)fd.append('files',f);const r=await fetch(`/files/upload/${encodeURIComponent(currentSrv.key)}?path=${encodeURIComponent(currentPath)}`,{method:'POST',body:fd});const d=await r.json().catch(()=>({}));if(!r.ok||d.success===false)alert(d.message||'Upload failed');input.value='';loadFiles()}
+async function doUploadFolder(input){if(!input.files||!input.files.length)return;const fd=new FormData();for(const f of input.files){fd.append('files',f);fd.append('relpaths',f.webkitRelativePath||f.name)}const r=await fetch(`/files/upload/${encodeURIComponent(currentSrv.key)}?path=${encodeURIComponent(currentPath)}`,{method:'POST',body:fd});const d=await r.json().catch(()=>({}));if(!r.ok||d.success===false)alert(d.message||'Upload failed');input.value='';loadFiles()}
+async function openEditor(name){currentFile=name;byId('edTitle').textContent=name;const res=await fetch(`/files/content/${encodeURIComponent(currentSrv.key)}?file=${encodeURIComponent(name)}`);const d=await res.json();byId('edArea').value=d.content||'';byId('editorModal').style.display='flex'}
+function closeEditor(){byId('editorModal').style.display='none'}
+async function saveFile(){const r=await fetch(`/files/save/${encodeURIComponent(currentSrv.key)}`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({file:currentFile,content:byId('edArea').value})});const d=await r.json().catch(()=>({success:false,message:'Save failed'}));if(!r.ok||!d.success){alert(d.message||'Save failed');return;}alert('Saved ✅');loadFiles()}
+document.addEventListener('DOMContentLoaded',loadServers);
+</script>
+</body>
+</html>

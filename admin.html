@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Admin Panel</title>
+<style>
+:root{--bg:#060a16;--card:rgba(255,255,255,.08);--card2:rgba(255,255,255,.05);--line:rgba(255,255,255,.12);--text:#eef7ff;--muted:#9cb1c8;--a:#58d6ff;--a2:#9070ff;--ok:#71ffb6;--bad:#ff8c8c;--warn:#ffd76e;--shadow:0 24px 80px rgba(0,0,0,.42)}
+*{box-sizing:border-box}body{margin:0;font-family:Inter,system-ui,Segoe UI,Arial,sans-serif;color:var(--text);background:radial-gradient(950px 520px at 7% 7%, rgba(88,214,255,.24), transparent 60%),radial-gradient(920px 520px at 93% 10%, rgba(144,112,255,.18), transparent 56%),linear-gradient(180deg,#0a1322,#040812)}
+.wrap{max-width:1450px;margin:0 auto;padding:16px}.top{position:sticky;top:0;z-index:20;display:flex;justify-content:space-between;align-items:center;gap:12px;background:rgba(4,8,18,.72);backdrop-filter:blur(18px);padding:14px 16px;border-bottom:1px solid var(--line)}
+.logo{font-size:20px;font-weight:1000}.logo span{background:linear-gradient(135deg,var(--a),var(--a2));-webkit-background-clip:text;background-clip:text;color:transparent}.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.btn{padding:12px 14px;border-radius:16px;border:1px solid var(--line);background:rgba(255,255,255,.06);color:var(--text);font-weight:1000;cursor:pointer}.btn.primary{border:0;background:linear-gradient(135deg,var(--a),var(--a2));color:#02131b}.btn.bad{color:var(--bad);border-color:rgba(255,140,140,.24)}
+.layout{display:grid;grid-template-columns:420px 1fr;gap:16px;margin-top:16px}.card{background:linear-gradient(180deg,var(--card),var(--card2));border:1px solid var(--line);border-radius:28px;box-shadow:var(--shadow);padding:18px}
+h2{margin:0;font-size:22px;font-weight:1000}.sub{color:var(--muted);font-size:13px;line-height:1.65;margin-top:8px}
+.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:16px}.metric{padding:14px;border-radius:20px;border:1px solid var(--line);background:rgba(255,255,255,.04)}.k{font-size:11px;font-weight:1000;color:var(--muted);text-transform:uppercase}.v{font-size:18px;font-weight:1000;margin-top:8px}
+input{width:100%;padding:13px 14px;border-radius:16px;border:1px solid var(--line);background:rgba(255,255,255,.05);color:var(--text);outline:none;margin-top:10px}
+table{width:100%;border-collapse:collapse;margin-top:14px}th,td{padding:11px 10px;border-bottom:1px solid rgba(255,255,255,.08);text-align:left;font-size:13px;vertical-align:top}th{font-size:11px;color:var(--muted);text-transform:uppercase}.pill{display:inline-block;padding:5px 9px;border-radius:999px;border:1px solid var(--line);font-size:11px;font-weight:1000}
+@media (max-width:1180px){.layout{grid-template-columns:1fr}.grid{grid-template-columns:repeat(2,1fr)}}
+</style>
+</head>
+<body>
+<div class="top wrap">
+  <div class="logo"><span>HAMA</span> ADMIN</div>
+  <div class="row">
+    <button class="btn" onclick="location.href='/'">Panel</button>
+    <button class="btn bad" onclick="location.href='/logout'">Logout</button>
+  </div>
+</div>
+<div class="wrap">
+  <div class="grid" id="statsGrid">
+    <div class="metric"><div class="k">Users</div><div id="stUsers" class="v">0</div></div>
+    <div class="metric"><div class="k">Servers</div><div id="stServers" class="v">0</div></div>
+    <div class="metric"><div class="k">Running</div><div id="stRunning" class="v">0</div></div>
+    <div class="metric"><div class="k">Memory Limited</div><div id="stMem" class="v">0</div></div>
+    <div class="metric"><div class="k">CPU Limited</div><div id="stCpu" class="v">0</div></div>
+    <div class="metric"><div class="k">Storage Limited</div><div id="stStorage" class="v">0</div></div>
+  </div>
+
+  <div class="layout">
+    <section class="card">
+      <h2>Create user</h2>
+      <div class="sub">Admin-only account creation. Each account gets one server automatically and an auto-generated public port code.</div>
+      <input id="username" placeholder="Username">
+      <input id="password" placeholder="Password">
+      <input id="days" type="number" min="1" value="30" placeholder="Days">
+      <input id="server_name" placeholder="Server display name">
+      <div class="row" style="margin-top:12px">
+        <button class="btn primary" onclick="createUser()">Create account</button>
+      </div>
+      <div id="msg" class="sub"></div>
+    </section>
+
+    <section class="card">
+      <h2>Users</h2>
+      <table>
+        <thead><tr><th>User</th><th>Server</th><th>Port</th><th>Code</th><th>Days</th><th>Actions</th></tr></thead>
+        <tbody id="usersBody"></tbody>
+      </table>
+    </section>
+  </div>
+</div>
+<script>
+async function loadStats(){const r=await fetch('/api/admin/quickstats');const d=await r.json();const s=d.stats||{};stUsers.textContent=s.users_total||0;stServers.textContent=s.servers_total||0;stRunning.textContent=s.servers_running||0;stMem.textContent=s.servers_memory_limited||0;stCpu.textContent=s.servers_cpu_limited||0;stStorage.textContent=s.servers_storage_limited||0}
+async function loadUsers(){const r=await fetch('/api/admin/users');const d=await r.json();const rows=(d.users||[]).map(u=>`<tr><td>${u.username}</td><td>${u.server_name||'-'}</td><td>${u.server_port||'-'}</td><td>${u.public_code||'-'}</td><td>${u.days_left??'-'}</td><td><button class="btn" onclick="addDays('${u.username}')">+ Days</button> <button class="btn" onclick="toggleUser('${u.username}', ${u.active?0:1})">${u.active?'Disable':'Enable'}</button></td></tr>`);usersBody.innerHTML=rows.join('')}
+async function createUser(){const payload={username:username.value.trim(),password:password.value,days:Number(days.value||0),server_name:server_name.value.trim()||username.value.trim()};const r=await fetch('/api/admin/user/create',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});const d=await r.json().catch(()=>({success:false,message:'Error'}));msg.textContent=d.message||'';if(d.success){username.value='';password.value='';server_name.value='';days.value='30';loadUsers();loadStats()}}
+async function addDays(user){const v=prompt('Add days','30');if(!v)return;await fetch('/api/admin/user/update',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username:user,add_days:Number(v)})});loadUsers();loadStats()}
+async function toggleUser(user,active){await fetch('/api/admin/user/update',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username:user,active:Boolean(active)})});loadUsers();loadStats()}
+document.addEventListener('DOMContentLoaded',()=>{loadStats();loadUsers();setInterval(loadStats,5000)})
+</script>
+</body>
+</html>
